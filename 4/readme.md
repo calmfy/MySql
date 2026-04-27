@@ -174,14 +174,14 @@ SELECT Person.Last_Name AS Owner_Last_Name,
        Person.First_Name AS Owner_First_Name,
        Pet.Nick AS Pet_Nick,
        Pet_Type.Name AS Pet_Type,
-       VaccineType.Name AS Vaccine_Type,
-       Vaccine.Vaccine_Date
+       vaccine_type.name AS Vaccine_Type,
+       vaccine.Vaccination_Date
 FROM Person
 JOIN Owner ON Person.Person_ID = Owner.Person_ID
 JOIN Pet ON Owner.Owner_ID = Pet.Owner_ID
 JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
-JOIN Vaccine ON Pet.Pet_ID = Vaccine.Pet_ID
-JOIN VaccineType ON Vaccine.Vaccine_Type_ID = VaccineType.Vaccine_Type_ID;
+JOIN vaccine ON Pet.Pet_ID = vaccine.pet_id
+JOIN vaccine_type ON vaccine.vaccine_type_id = vaccine_type.vaccine_type_id;
 ```
 
 📌 В запросе используются таблицы:
