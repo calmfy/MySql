@@ -1,29 +1,37 @@
-# 🔗 Задание 4 — SQL JOIN-запросы
+# 🔗 Задание 4 — SQL-запросы с JOIN
 
 ## 📌 Описание
 
-В рамках задания были реализованы SQL-запросы с использованием соединений таблиц (JOIN).
+В рамках задания были написаны и отлажены SQL-запросы с использованием соединения таблиц.
 
-Использовались:
+Используемая база данных: `pet_db`.
 
-* INNER JOIN
-* LEFT JOIN
-* соединение без JOIN (через WHERE)
+В задании применяются:
+
+* `JOIN`
+* соединение таблиц через `WHERE`
+* `LEFT JOIN`
+* `GROUP BY`
+* `HAVING`
+* агрегатные функции
 
 ---
 
 ## 🗄 Используемые таблицы
 
-* `pet` — питомцы
-* `owner` — владельцы
-* `order1` — заказы
-* `employee` — исполнители
-* `vaccine` — прививки
-* `vaccine_type` — виды прививок
+* `Pet` — питомцы
+* `Pet_Type` — виды питомцев
+* `Owner` — владельцы
+* `Person` — персональные данные людей
+* `Employee` — сотрудники
+* `Order1` — заказы
+* `Service` — услуги
+* `Vaccine` — прививки
+* `VaccineType` / `Vaccine_Type` — виды прививок
 
 ---
 
-## 🚀 Подключение
+## 🚀 Подключение к базе
 
 ```sql
 USE pet_db;
@@ -33,133 +41,188 @@ USE pet_db;
 
 ## 📋 Запросы
 
-### 1. Данные на Партизана (с видом животного)
+---
+
+## 1. Данные на Partizan, включая вид животного
 
 ```sql
-SELECT p.*, p.type
-FROM pet p
-WHERE p.name = 'Партизан';
+SELECT Pet.*, Pet_Type.Name AS Pet_Type
+FROM Pet
+JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+WHERE Pet.Nick = 'Partizan';
 ```
 
-📌 Получение информации о питомце с указанием типа.
+📌 Запрос выводит всю информацию о питомце `Partizan` и дополнительно показывает вид животного.
 
 ---
 
-### 2. Список всех собак
+## 2. Список всех собак с кличками, породой и возрастом
 
 ```sql
-SELECT name, breed, age
-FROM pet
-WHERE type = 'Собака';
+SELECT Pet.Nick, Pet.Breed, Pet.Age
+FROM Pet
+JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+WHERE Pet_Type.Name = 'DOG';
 ```
 
-📌 Вывод всех собак.
+📌 Выводятся только питомцы, относящиеся к виду `DOG`.
 
 ---
 
-### 3. Средний возраст кошек
+## 3. Средний возраст кошек
 
 ```sql
-SELECT AVG(age) AS avg_age
-FROM pet
-WHERE type = 'Кошка';
+SELECT AVG(CAST(Pet.Age AS DECIMAL(10,2))) AS Avg_Cat_Age
+FROM Pet
+JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+WHERE Pet_Type.Name = 'CAT';
 ```
 
-📌 Средний возраст кошек.
+📌 Считается средний возраст кошек.
+`CAST` используется для преобразования возраста в вещественный тип.
 
 ---
 
-### 4. Невыполненные заказы
+## 4. Время и исполнители невыполненных заказов
 
 ```sql
-SELECT o.date, e.fio
-FROM order1 o
-JOIN employee e ON o.employee_id = e.employee_id
-WHERE o.done = 0;
+SELECT Order1.Time_Order,
+       Person.Last_Name,
+       Person.First_Name
+FROM Order1
+JOIN Employee ON Order1.Employee_ID = Employee.Employee_ID
+JOIN Person ON Employee.Person_ID = Person.Person_ID
+WHERE Order1.Is_Done = 0;
 ```
 
-📌 Время и исполнители невыполненных заказов.
+📌 Выводятся невыполненные заказы и сотрудники, которые назначены исполнителями.
 
 ---
 
-### 5. Список хозяев собак
+## 5. Список хозяев собак: имя, фамилия, телефон
 
 ```sql
-SELECT DISTINCT o.fio, o.phone
-FROM owner o
-JOIN pet p ON o.owner_id = p.owner_id
-WHERE p.type = 'Собака';
+SELECT DISTINCT Person.First_Name,
+                Person.Last_Name,
+                Person.Phone
+FROM Person
+JOIN Owner ON Person.Person_ID = Owner.Person_ID
+JOIN Pet ON Owner.Owner_ID = Pet.Owner_ID
+JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+WHERE Pet_Type.Name = 'DOG';
 ```
 
-📌 Владельцы собак.
+📌 Запрос показывает владельцев собак.
 
 ---
 
-### 6. Внешнее соединение (все виды питомцев)
+## 6. Все виды питомцев и клички представителей этих видов
 
 ```sql
-SELECT p.type, p.name
-FROM pet p
-LEFT JOIN owner o ON p.owner_id = o.owner_id;
+SELECT Pet_Type.Name AS Pet_Type,
+       Pet.Nick
+FROM Pet_Type
+LEFT JOIN Pet ON Pet_Type.Pet_Type_ID = Pet.Pet_Type_ID;
 ```
 
-📌 Все питомцы, даже если нет владельца.
+📌 Используется внешнее соединение `LEFT JOIN`.
+Будут показаны все виды питомцев, даже если представителей какого-то вида нет.
 
 ---
 
-### 7. Количество питомцев по возрасту
+## 7. Сколько имеется котов, собак и других питомцев в каждом возрасте
 
 ```sql
-SELECT age, COUNT(*) AS count_pets
-FROM pet
-GROUP BY age;
+SELECT Pet_Type.Name AS Pet_Type,
+       Pet.Age,
+       COUNT(*) AS Pet_Count
+FROM Pet
+JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+GROUP BY Pet_Type.Name, Pet.Age
+ORDER BY Pet_Type.Name, Pet.Age;
 ```
 
-📌 Сколько питомцев каждого возраста.
+📌 Запрос группирует питомцев по виду и возрасту.
 
 ---
 
-### 8. Сотрудники с более чем 3 заказами
+## 8. Фамилии сотрудников, выполнивших более трёх заказов
 
 ```sql
-SELECT e.fio, COUNT(*) AS order_count
-FROM employee e
-JOIN order1 o ON e.employee_id = o.employee_id
-GROUP BY e.fio
+SELECT Person.Last_Name,
+       COUNT(*) AS Done_Orders
+FROM Order1
+JOIN Employee ON Order1.Employee_ID = Employee.Employee_ID
+JOIN Person ON Employee.Person_ID = Person.Person_ID
+WHERE Order1.Is_Done = 1
+GROUP BY Person.Last_Name
 HAVING COUNT(*) > 3;
 ```
 
-📌 Активные сотрудники.
+📌 Выводятся сотрудники, у которых больше трёх выполненных заказов.
 
 ---
 
-## ✍️ Дополнительный запрос (про прививки)
+## 9. Запрос про прививки с использованием не менее четырёх таблиц
 
-### 9. Владельцы и их питомцы с прививками
+### Формулировка
+
+Вывести владельцев, их питомцев, вид животного, вид прививки и дату прививки.
 
 ```sql
-SELECT o.fio AS owner,
-       p.name AS pet,
-       vt.name AS vaccine,
-       v.vaccine_date
-FROM owner o
-JOIN pet p ON o.owner_id = p.owner_id
-JOIN vaccine v ON p.pet_id = v.pet_id
-JOIN vaccine_type vt ON v.vaccine_type_id = vt.vaccine_type_id;
+SELECT Person.Last_Name AS Owner_Last_Name,
+       Person.First_Name AS Owner_First_Name,
+       Pet.Nick AS Pet_Nick,
+       Pet_Type.Name AS Pet_Type,
+       VaccineType.Name AS Vaccine_Type,
+       Vaccine.Vaccine_Date
+FROM Person
+JOIN Owner ON Person.Person_ID = Owner.Person_ID
+JOIN Pet ON Owner.Owner_ID = Pet.Owner_ID
+JOIN Pet_Type ON Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+JOIN Vaccine ON Pet.Pet_ID = Vaccine.Pet_ID
+JOIN VaccineType ON Vaccine.Vaccine_Type_ID = VaccineType.Vaccine_Type_ID;
 ```
 
-📌 Вывод информации о владельцах, питомцах и их прививках.
+📌 В запросе используются таблицы:
+
+* `Person`
+* `Owner`
+* `Pet`
+* `Pet_Type`
+* `Vaccine`
+* `VaccineType`
+
+---
+
+## Альтернативный пример соединения без JOIN
+
+```sql
+SELECT Pet.Nick,
+       Pet.Breed,
+       Pet.Age,
+       Pet_Type.Name AS Pet_Type
+FROM Pet, Pet_Type
+WHERE Pet.Pet_Type_ID = Pet_Type.Pet_Type_ID
+  AND Pet_Type.Name = 'DOG';
+```
+
+📌 Этот запрос делает то же соединение таблиц, но без явного `JOIN`.
 
 ---
 
 ## ✅ Итог
 
-В ходе выполнения задания были освоены:
+В ходе выполнения задания были использованы:
 
-* JOIN (INNER, LEFT)
-* объединение таблиц
-* агрегатные функции с JOIN
-* сложные запросы (4+ таблицы)
+* `JOIN`
+* `LEFT JOIN`
+* соединение таблиц через `WHERE`
+* `GROUP BY`
+* `HAVING`
+* `COUNT`
+* `AVG`
+* псевдонимы столбцов
 
 ---
 
@@ -168,5 +231,3 @@ JOIN vaccine_type vt ON v.vaccine_type_id = vt.vaccine_type_id;
 Студент: *[ТВОЁ ИМЯ]*
 Группа: *[ТВОЯ ГРУППА]*
 Год: 2025
-
----
