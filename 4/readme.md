@@ -1,7 +1,7 @@
 # 🔗 Задание 4 — SQL-запросы с JOIN
 
 ## 📌 Описание
-
+https://drive.google.com/drive/folders/1ZlKCzWM-nX-bsdAS_kj8fjrP1lSbHyhI?usp=sharing
 В рамках задания были написаны и отлажены SQL-запросы с использованием соединения таблиц.
 
 Используемая база данных: `pet_db`.
